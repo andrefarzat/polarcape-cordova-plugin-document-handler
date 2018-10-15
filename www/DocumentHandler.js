@@ -1,15 +1,7 @@
-;( function () {
-    var viewDocument = function (
-            successHandler,
-            failureHandler,
-            url, fileName) {
-        cordova.exec(
-                successHandler,
-                failureHandler,
-                "DocumentHandler",
-                "HandleDocumentWithURL",
-                [{"url": url, "fileName":fileName}]);
-    };
+; (function () {
+    function viewDocument(successHandler, failureHandler, url, fileName) {
+        cordova.exec(successHandler, failureHandler, "DocumentHandler", "HandleDocumentWithURL", [{ "url": url, "fileName": fileName }]);
+    }
 
     var b64toBlob = function (b64Data, contentType, sliceSize) {
         contentType = contentType || '';
@@ -31,14 +23,14 @@
             byteArrays.push(byteArray);
         }
 
-        var blob = new Blob(byteArrays, {type: contentType});
+        var blob = new Blob(byteArrays, { type: contentType });
         return blob;
     };
 
     var writeBase64ToFile = function (fileName, data, path, type) {
         return new Promise(function (resolve, reject) {
             window.resolveLocalFileSystemURL(path, function (directoryEntry) {
-                directoryEntry.getFile(fileName, {create: true}, function (fileEntry) {
+                directoryEntry.getFile(fileName, { create: true }, function (fileEntry) {
                     fileEntry.createWriter(function (fileWriter) {
                         var blob = b64toBlob(data, type);
                         fileWriter.write(blob);
@@ -62,23 +54,28 @@
         });
     };
 
-    var DocumentViewer = {
-        saveAndPreviewBase64File: function (successHandler, failureHandler, data, type, path, fileName) {
-            writeBase64ToFile(fileName, data, path, type).then(
-                    function (response) {
-                        viewDocument(successHandler, failureHandler, path + fileName, fileName);
-                    }, function (error) {
+    var DocumentHandler = function () { };
+
+    DocumentHandler.prototype.saveAndPreviewBase64File = function (successHandler, failureHandler, data, type, path, fileName) {
+        writeBase64ToFile(fileName, data, path, type).then(
+            function (response) {
+                viewDocument(successHandler, failureHandler, path + fileName, fileName);
+            }, function (error) {
                 failureHandler('Error');
             });
-        },
-        previewFileFromUrlOrPath: function (successHandler, failureHandler, url, fileName) {
-            viewDocument(successHandler, failureHandler, url, fileName);
-        }
     };
 
-    window.DocumentViewer = DocumentViewer;
-    
+    DocumentHandler.prototype.previewFileFromUrlOrPath = function (successHandler, failureHandler, url, fileName) {
+        viewDocument(successHandler, failureHandler, url, fileName);
+    };
+
+    DocumentHandler.prototype.vai = function() {
+        console.log('foi!');
+    };
+
     if (window.module && window.module.exports) {
-        window.module.exports = DocumentViewer;
+        window.module.exports = new DocumentViewer();
+    } else {
+        window.DocumentViewer = new DocumentViewer();
     }
-} ) ();
+})();
